@@ -1,4 +1,21 @@
 import random
+import threading
+import time
+
+
+class CustomTimer(threading.Timer):
+    def __init__(self, interval, function, args=None, kwargs=None):
+        super().__init__(interval, function, args=None, kwargs=None)
+        self._start_time = 0.0
+
+    def start_timer(self) -> None:
+        self._start_time = time.time()
+        super().start()
+
+    def time_remaining(self) -> int:
+        elapsed_time = time.time()
+        return int(self.interval - (elapsed_time - self._start_time))
+
 
 def random_bobby_quote() -> str:
     return random.choice(

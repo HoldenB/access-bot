@@ -27,17 +27,39 @@ class AccessCommand(Command):
 
         @client.command()
         async def access(ctx):
+            user_id = ctx.message.author.id
+            if client.member_on_cooldown(user_id):
+                await ctx.message.author.send(
+                    f'Command on cooldown. Please wait {client.member_cooldown_time(user_id)} seconds to use this command again.')
+                return
+
+            cooldown_duration_sec = 120
+            client.add_access_member(user_id, cooldown_duration_sec)
+
             token = "someRandomTokenString"
             await ctx.message.author.send(f'Here is your access token: {token}')
 
         self.cmd = access
 
 
+# TODO Make sure this is admin only!
+class KillCommand(Command):
+    def __init__(self, client: CustomClient):
+        super().__init__('Force the client to logout.')
+
+        @client.command()
+        async def kill(ctx):
+            await client.logout()
+
+        self.cmd = kill
+
+
 def add_commands(client: CustomClient) -> None:
 
     custom_commands = [
         BobbyCommand(client),
-        AccessCommand(client)
+        AccessCommand(client),
+        KillCommand(client)
     ]
 
     @client.command()
