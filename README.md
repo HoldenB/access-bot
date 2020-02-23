@@ -15,7 +15,7 @@ pipenv install --dev
 ## Note:
 In order to run the CustomClient, a python-dotenv is necessary. The
 dotenv will need to contain the client secret along with the appropriate
-Discord guild
+Discord guild.
 
 ```bash
 # Your dotenv file should look similar to this
@@ -26,6 +26,6 @@ DISCORD_GUILD={your-guild-name}
 
 Upon running:
 ```bash
-py bot.py
+py __main__.py
 ```
-The client should properly connect to the guild
+The client should properly establish a connection.

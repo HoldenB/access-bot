@@ -22,4 +22,5 @@ class CustomClient(commands.Bot):
     async def on_message(self, message: str):
         if message.author == self.user:
             return
+
         await self.process_commands(message)
