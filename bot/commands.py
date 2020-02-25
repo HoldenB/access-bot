@@ -3,6 +3,48 @@ import bot.util as util
 from bot.client import CustomClient
 
 
+#######################################################################
+# Helper functions
+
+async def command_status_cooldown(cmd: str,
+                                  client: CustomClient,
+                                  duration: int,
+                                  ctx) -> bool:
+    """Accepts a command context and extracts the user who sent
+    the command. Once the user is extracted, a cooldown is then
+    registed with the client for the given issuer of the command.
+    This command cooldown is tracked on the client. If this is called
+    and the user is not currently on cooldown, we'll return True and
+    you should proceed with your command. Otherwise if the user is
+    on cooldown with the command, we'll return False and an early
+    return is necessary.
+
+    Arguments:
+        cmd {str} -- The command name
+        client {CustomClient} -- The CustomClient instance
+        duration {int} -- duration of the command cooldown
+        ctx {Context} -- Command context
+
+    Returns:
+        bool -- True if the issuer of the command is not on cooldown,
+        and has just been placed on cooldown. False if the user is
+        currently on cooldown with the given command.
+    """
+    user_id = ctx.message.author.id
+    if client.member_on_cooldown(cmd, user_id):
+        await ctx.message.author.send(
+            'Command on cooldown. Please wait'
+            f' {client.member_cooldown_time(cmd, user_id)}'
+            ' seconds to use this command again.')
+        return True
+
+    client.add_access_member(cmd, user_id, duration)
+    return False
+
+
+#######################################################################
+# Commands
+
 class Command:
     """Command base class. This class stores a description
     and the command that is associated with it.
@@ -43,16 +85,8 @@ class AccessCommand(Command):
 
         @client.command()
         async def access(ctx):
-            user_id = ctx.message.author.id
-            if client.member_on_cooldown(user_id):
-                await ctx.message.author.send(
-                    'Command on cooldown. Please wait'
-                    f' {client.member_cooldown_time(user_id)}'
-                    ' seconds to use this command again.')
+            if await command_status_cooldown('access', client, 120, ctx):
                 return
-
-            cooldown_duration_sec = 120
-            client.add_access_member(user_id, cooldown_duration_sec)
 
             token = "someRandomTokenString"
             await ctx.message.author.send(f'Here is your access token: {token}')
@@ -77,6 +111,8 @@ class KillCommand(Command):
 
         self.cmd = kill
 
+
+#######################################################################
 
 def add_commands(client: CustomClient) -> None:
     """Adds all configured commands to custom client
