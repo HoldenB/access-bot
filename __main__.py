@@ -4,6 +4,11 @@ from bot.commands import add_commands
 
 
 def main(token: str, guild: str):
+    """Client application entry point
+    Arguments:
+        token {str} -- Client secret
+        guild {str} -- Guild that we should connect to
+    """
     client = CustomClient(token, guild)
     add_commands(client)
     client.run_custom_client()

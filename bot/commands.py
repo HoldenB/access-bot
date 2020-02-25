@@ -4,13 +4,22 @@ from bot.client import CustomClient
 
 
 class Command:
+    """Command base class. This class stores a description
+    and the command that is associated with it.
+    """
     def __init__(self, description: str):
         self.description = description
         self.cmd = None
 
 
 class BobbyCommand(Command):
+    """This command displays a random quote from Bobby
+    """
     def __init__(self, client: CustomClient):
+        """
+        Arguments:
+            client {CustomClient} -- Discord client object
+        """
         super().__init__('Display a random quote from Bobby.')
 
         @client.command()
@@ -21,7 +30,14 @@ class BobbyCommand(Command):
 
 
 class AccessCommand(Command):
+    """This command provides users with a one time access
+    token to view/download files.
+    """
     def __init__(self, client: CustomClient):
+        """
+        Arguments:
+            client {CustomClient} -- Discord client object
+        """
         super().__init__(
             'Privides the user with a one time access token to view/download files.')
 
@@ -30,7 +46,9 @@ class AccessCommand(Command):
             user_id = ctx.message.author.id
             if client.member_on_cooldown(user_id):
                 await ctx.message.author.send(
-                    f'Command on cooldown. Please wait {client.member_cooldown_time(user_id)} seconds to use this command again.')
+                    'Command on cooldown. Please wait'
+                    f' {client.member_cooldown_time(user_id)}'
+                    ' seconds to use this command again.')
                 return
 
             cooldown_duration_sec = 120
@@ -44,7 +62,13 @@ class AccessCommand(Command):
 
 # TODO Make sure this is admin only!
 class KillCommand(Command):
+    """This command forces the client to logout
+    """
     def __init__(self, client: CustomClient):
+        """
+        Arguments:
+            client {CustomClient} -- Discord client object
+        """
         super().__init__('Force the client to logout.')
 
         @client.command()
@@ -55,7 +79,11 @@ class KillCommand(Command):
 
 
 def add_commands(client: CustomClient) -> None:
+    """Adds all configured commands to custom client
 
+    Arguments:
+        client {CustomClient} -- Custom client object
+    """
     custom_commands = [
         BobbyCommand(client),
         AccessCommand(client),
@@ -72,7 +100,11 @@ def add_commands(client: CustomClient) -> None:
         embed.set_author(name='Help')
 
         for command in custom_commands:
-            assert(command.cmd.name)
+            if command is None:
+                print(f'commands.py:add_commands: Custom command not found.'
+                      ' Did you forget to set a cmd param?')
+                continue
+
             embed.add_field(
                 name=f'{client.command_prefix}{command.cmd.name}',
                 value=command.description,
