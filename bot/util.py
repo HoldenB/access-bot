@@ -1,6 +1,8 @@
 import random
+import secrets
 import threading
 import time
+import discord
 
 
 class CustomTimer(threading.Timer):
@@ -25,6 +27,64 @@ class CustomTimer(threading.Timer):
         """
         elapsed_time = time.time()
         return int(self.interval - (elapsed_time - self._start_time))
+
+
+class UserData:
+    """Object that stores discord user data
+    """
+    def __init__(self, user_id: str, user_roles: list, secret: str):
+        """
+        Note:
+            Use the generate_user_data() function to create a valid instance
+            of this object
+
+        Arguments:
+            user_id {str} -- Unique user ID
+            user_roles {list} -- List of roles assigned to this Member
+            secret {str} -- Generated password secret
+        """
+        self.user_id = user_id
+        self.user_roles = user_roles
+        self.secret = secret
+
+    def __repr__(self):
+        return f'User ID: {self.user_id}\nRoles: {self.user_roles}\nSecret: {self.secret}'
+
+    @staticmethod
+    def generate_user_data(ctx):
+        """Generate a valid instance of a UserData object
+        from a message context
+
+        Arguments:
+            ctx {Context} -- Message context
+
+        Returns:
+            UserData -- A valid UserData instance
+        """
+        #TODO possibly check against channels here to see which
+        # channels are available to the user
+        # ie: ctx.message.author.permissions_in(channel_name)
+
+        #TODO hash the secret and do not store it, only store the hash
+        return UserData(
+            ctx.message.author.id,
+            [role.name for role in ctx.message.author.roles],
+            generate_secret()
+        )
+
+
+def generate_secret(num_bytes: int = 16) -> str:
+    """Generate a random URL-safe text string, containing num_bytes random bytes.
+        The text is Base64 encoded, so on average each byte results in approximately
+        1.3 characters. Default returns a 16 byte string.
+
+    Keyword Arguments:
+        num_bytes {int} -- Number of bytes (default: {16})
+
+    Returns:
+        str -- Returns a random URL-safe text string
+    """
+    return secrets.token_urlsafe(nbytes=num_bytes)
 
 
 def random_bobby_quote() -> str:

@@ -85,11 +85,18 @@ class AccessCommand(Command):
 
         @client.command()
         async def access(ctx):
+            if ctx.message.channel.type == discord.ChannelType.private:
+                await ctx.message.author.send(
+                    'Command: $access failed. Please do not send this command in a private message.')
+                return
+
             if await command_status_cooldown('access', client, 120, ctx):
                 return
 
-            token = "someRandomTokenString"
-            await ctx.message.author.send(f'Here is your access token: {token}')
+            #TODO store this user data in a database
+            data = util.UserData.generate_user_data(ctx)
+
+            await ctx.message.author.send(f'Here is your password secret: {data.secret}')
 
         self.cmd = access
 
