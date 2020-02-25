@@ -26,6 +26,7 @@ DISCORD_GUILD={your-guild-name}
 
 Upon running:
 ```bash
+pipenv shell
 py __main__.py
 ```
 The client should properly establish a connection.
@@ -33,6 +34,6 @@ The client should properly establish a connection.
 ***
 TODO
 - [x] Allow users to only use the access command once every 60-120 seconds
-- [ ] We will need cooldown timers for each command that wants to call a timer
+- [x] We will need cooldown timers for each command that wants to call a timer
 - [ ] Allow access command to get the member role and provide role specific token/info
 - [ ] Figure out the best way to provide oauth access (maybe a token that contains the entire state + member or maybe do things via IP addr)
