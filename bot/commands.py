@@ -94,6 +94,23 @@ class AccessCommand(Command):
         self.cmd = access
 
 
+class LatencyCommand(Command):
+    """Command to check the Client's latency
+    """
+    def __init__(self, client: CustomClient):
+        """
+        Arguments:
+            client {CustomClient} -- Discord client object
+        """
+        super().__init__('Check the client\'s latency.')
+
+        @client.command()
+        async def ping(ctx):
+            await ctx.send(f'My ping is {round(client.latency * 1000)}ms!')
+
+        self.cmd = ping
+
+
 # TODO Make sure this is admin only!
 class KillCommand(Command):
     """This command forces the client to logout
@@ -123,6 +140,7 @@ def add_commands(client: CustomClient) -> None:
     custom_commands = [
         BobbyCommand(client),
         AccessCommand(client),
+        LatencyCommand(client),
         KillCommand(client)
     ]
 
