@@ -42,6 +42,26 @@ async def command_status_cooldown(cmd: str,
     return False
 
 
+async def is_private_channel(cmd: str, ctx) -> bool:
+    """Checks to see if the incoming message has been
+    sent from a private channel
+
+    Arguments:
+        cmd {str} -- The command name
+        ctx {Context} -- Command context
+
+    Returns:
+        bool -- True if the message has been sent from a
+        private channel. False otherwise.
+    """
+    if ctx.message.channel.type == discord.ChannelType.private:
+        await ctx.message.author.send(
+            f'Command: ${cmd} failed: Please do not send this command in a private message.')
+        return True
+
+    return False
+
+
 #######################################################################
 # Commands
 
@@ -86,12 +106,11 @@ class AccessCommand(Command):
 
         @client.command()
         async def access(ctx):
-            if ctx.message.channel.type == discord.ChannelType.private:
-                await ctx.message.author.send(
-                    'Command: $access failed. Please do not send this command in a private message.')
-                return
+            cmd = 'access'
 
-            if await command_status_cooldown('access', client, 120, ctx):
+            if await is_private_channel(cmd, ctx):
+                return
+            if await command_status_cooldown(cmd, client, 120, ctx):
                 return
 
             #TODO store this user data in a database
@@ -133,6 +152,8 @@ class KillCommand(Command):
         super().__init__('Force the client to logout.', True)
 
         @client.command()
+        #TODO possibly just remove this and manually implement so that
+        # feedback can be provided to the issuer
         @discord.ext.commands.has_permissions(administrator=True)
         async def kill(ctx):
             await client.logout()
@@ -157,9 +178,7 @@ def add_commands(client: CustomClient) -> None:
 
     @client.command()
     async def help(ctx):
-        if ctx.message.channel.type == discord.ChannelType.private:
-            await ctx.message.author.send(
-                'Command: $help failed. Please do not send this command in a private message.')
+        if await is_private_channel('help', ctx):
             return
 
         author = ctx.message.author
