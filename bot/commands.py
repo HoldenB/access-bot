@@ -49,8 +49,9 @@ class Command:
     """Command base class. This class stores a description
     and the command that is associated with it.
     """
-    def __init__(self, description: str):
+    def __init__(self, description: str, is_admin: bool = False):
         self.description = description
+        self.is_admin = is_admin
         self.cmd = None
 
 
@@ -96,7 +97,9 @@ class AccessCommand(Command):
             #TODO store this user data in a database
             data = util.UserData.generate_user_data(ctx)
 
-            await ctx.message.author.send(f'Here is your password secret: {data.secret}')
+            await ctx.message.author.send(f'Here is your password secret:')
+            # Send on a new line so that it's easily copyable on mobile
+            await ctx.message.author.send(data.secret)
 
         self.cmd = access
 
@@ -109,16 +112,16 @@ class LatencyCommand(Command):
         Arguments:
             client {CustomClient} -- Discord client object
         """
-        super().__init__('Check the client\'s latency.')
+        super().__init__('Check the client\'s latency.', True)
 
         @client.command()
+        @discord.ext.commands.has_permissions(administrator=True)
         async def ping(ctx):
             await ctx.send(f'My ping is {round(client.latency * 1000)}ms!')
 
         self.cmd = ping
 
 
-# TODO Make sure this is admin only!
 class KillCommand(Command):
     """This command forces the client to logout
     """
@@ -127,9 +130,10 @@ class KillCommand(Command):
         Arguments:
             client {CustomClient} -- Discord client object
         """
-        super().__init__('Force the client to logout.')
+        super().__init__('Force the client to logout.', True)
 
         @client.command()
+        @discord.ext.commands.has_permissions(administrator=True)
         async def kill(ctx):
             await client.logout()
 
@@ -153,7 +157,14 @@ def add_commands(client: CustomClient) -> None:
 
     @client.command()
     async def help(ctx):
+        if ctx.message.channel.type == discord.ChannelType.private:
+            await ctx.message.author.send(
+                'Command: $help failed. Please do not send this command in a private message.')
+            return
+
         author = ctx.message.author
+        author_is_admin = author.top_role.permissions.administrator
+
         embed = discord.Embed(
             color=discord.Color.orange()
         )
@@ -166,10 +177,20 @@ def add_commands(client: CustomClient) -> None:
                       ' Did you forget to set a cmd param?')
                 continue
 
-            embed.add_field(
-                name=f'{client.command_prefix}{command.cmd.name}',
-                value=command.description,
-                inline=False
-            )
+            # Non-admin commands will always be shown in the help menu
+            if not command.is_admin:
+                embed.add_field(
+                    name=f'{client.command_prefix}{command.cmd.name}',
+                    value=command.description,
+                    inline=False
+                )
+                continue
+
+            if command.is_admin and author_is_admin:
+                embed.add_field(
+                    name=f'{client.command_prefix}{command.cmd.name}',
+                    value=command.description,
+                    inline=False
+                )
 
         await ctx.send(author, embed=embed)
