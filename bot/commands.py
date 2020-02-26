@@ -166,10 +166,13 @@ def add_commands(client: CustomClient) -> None:
         author_is_admin = author.top_role.permissions.administrator
 
         embed = discord.Embed(
+            title='Help',
+            description='A list of commands that you are able to use',
             color=discord.Color.orange()
         )
 
-        embed.set_author(name='Help')
+        embed.set_author(name=client.user.name, icon_url=client.user.avatar_url)
+        embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url)
 
         for command in custom_commands:
             if command is None:
