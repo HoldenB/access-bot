@@ -62,6 +62,48 @@ async def is_private_channel(cmd: str, ctx) -> bool:
     return False
 
 
+def gen_command_help_embed(commands: list,
+                           cmd_type: str,
+                           client: CustomClient,
+                           ctx) -> discord.Embed:
+    """Generate a "help" embed for a list of
+    commands. A command type should be passed to
+    populate the title of the embed.
+
+    Arguments:
+        commands {list} -- List of commands
+        cmd_type {str} -- Command type, ie. Custom, Admin, etc.
+        client {CustomClient} -- Custom client
+        ctx {Context} -- Command context
+
+    Returns:
+        discord.Embed -- The "help" embed for the list
+        of commands
+    """
+    embed = discord.Embed(
+        title=f'{cmd_type} Command Help',
+        description=f'A list of {cmd_type} commands that you are able to use',
+        color=discord.Color.orange()
+    )
+
+    embed.set_author(name=client.user.name, icon_url=client.user.avatar_url)
+    embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url)
+
+    for command in commands:
+        if command is None:
+            print(f'commands.py:add_commands: Custom command not found.'
+                ' Did you forget to set a cmd param?')
+            continue
+
+        embed.add_field(
+            name=f'{client.command_prefix}{command.cmd.name}',
+            value=command.description,
+            inline=False
+        )
+
+    return embed
+
+
 #######################################################################
 # Commands
 
@@ -176,43 +218,30 @@ def add_commands(client: CustomClient) -> None:
         KillCommand(client)
     ]
 
+    # Separate admin commands and filter out the original ones
+    admin_commands = [c for c in custom_commands if c.is_admin]
+    custom_commands = [c for c in custom_commands if not c.is_admin]
+
     @client.command()
     async def help(ctx):
+        # User must call this in a non-private channel, however the response
+        # is sent via private. This is to ensure non-admin users cannot see
+        # admin commands
         if await is_private_channel('help', ctx):
             return
 
         author = ctx.message.author
         author_is_admin = author.top_role.permissions.administrator
 
-        embed = discord.Embed(
-            title='Help',
-            description='A list of commands that you are able to use',
-            color=discord.Color.orange()
-        )
+        await author.send(
+            author, embed=gen_command_help_embed(
+                custom_commands, 'Custom', client, ctx))
 
-        embed.set_author(name=client.user.name, icon_url=client.user.avatar_url)
-        embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url)
+        if not author_is_admin:
+            return
 
-        for command in custom_commands:
-            if command is None:
-                print(f'commands.py:add_commands: Custom command not found.'
-                      ' Did you forget to set a cmd param?')
-                continue
-
-            # Non-admin commands will always be shown in the help menu
-            if not command.is_admin:
-                embed.add_field(
-                    name=f'{client.command_prefix}{command.cmd.name}',
-                    value=command.description,
-                    inline=False
-                )
-                continue
-
-            if command.is_admin and author_is_admin:
-                embed.add_field(
-                    name=f'{client.command_prefix}{command.cmd.name}',
-                    value=command.description,
-                    inline=False
-                )
-
-        await ctx.send(author, embed=embed)
+        # If the author is an admin, also send them the
+        # list of admin commands
+        await author.send(
+            author, embed=gen_command_help_embed(
+                admin_commands, 'Admin', client, ctx))
