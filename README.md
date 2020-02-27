@@ -1,11 +1,11 @@
-# oauth-file-bot
+# access-bot
 A discord bot for providing oauth tokens to client members
 
 ## Installation
 This project utilizes pipenv for ease of installation.
 After cloning the project:
 ```bash
-cd oauth-file-bot
+cd access-bot
 # Simple install
 pipenv install
 # Dev install (with linter, etc.)
