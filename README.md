@@ -1,5 +1,5 @@
 # access-bot
-A discord bot for providing oauth tokens to client members
+A simple discord bot for providing access tokens to to clients that are attempting to access a webserver
 
 ## Installation
 This project utilizes pipenv for ease of installation.
